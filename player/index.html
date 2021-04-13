@@ -1,0 +1,66 @@
+<html>
+  <head>
+    <!--链接样式-->
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="stylesheet" type="text/css" href="./index.css" />
+    <!--设置标题-->
+    <title>凯哔哩-播放器</title>
+  </head>
+  <body>
+    <!--播放器-->
+    <iframe id="player" class="video_normal" src="https://player.bilibili.com/player.html?aid=711734342&bvid=BV1bD4y127RX&cid=224524113&page=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"> </iframe>
+    <!--导航栏-->
+    <div class="tab">
+      <ul>
+        <li tabIndex="0" class="focus">简介</li>
+        <li tabIndex="1">评论</li>
+      </ul>
+    </div>
+    <!--视频信息（弹幕、播放、三连等）-->
+    <div class="items">
+      <!--标题、播放、弹幕量-->
+      <div class="item" id="title" tabIndex="0">
+        <a id="title">标题加载中</a>
+        <div id="info">
+          <div id="view">
+            <img src="../img/inside_icon/play/view.svg">
+            <a id="view">-</a>
+          </div>
+          <div id="danmaku">
+            <img src="../img/inside_icon/play/danmaku.svg">
+            <a id="danmaku">-</a>
+          </div>
+        </div>
+      </div>
+      <!--点赞、投币、收藏-->
+      <div class="item" id="sanlian" tabIndex="1">
+        <div id="like">
+          <img src="../img/inside_icon/play/like.svg">
+          <a id="like">加载中</a>
+        </div>
+        <div id="coin">
+          <img src="../img/inside_icon/play/coin.svg">
+          <a id="coin">加载中</a>
+        </div>
+        <div id="favorite">
+          <img src="../img/inside_icon/play/favorite.svg">
+          <a id="favorite">加载中</a>
+        </div>
+      </div>
+      <div class="item" tabIndex="2"></div>
+      <div class="item" tabIndex="3"></div>
+      <div class="item" tabIndex="4"></div>
+    </div>
+      
+    <!--导航键-->
+    <footer id="softkeys">
+      <div id="softkey-left">全屏</div>
+      <div id="softkey-center"> </div>
+      <div id="softkey-right"> </div>
+    </footer>
+  </body>
+</html>
+<!--链接JavaSript-->
+<script src="../lib/jquery-3.4.1.js"></script>
+<script src="../lib/jquery.cookie.js"></script>
+<script src="./index.js"></script>

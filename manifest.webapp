@@ -1,0 +1,23 @@
+{
+  "name": "哔哩哔哩",
+  "description": "哔哩哔哩 KaiOS 版",
+  "version": "1.4",
+  "launch_path": "/index.html",
+  "type": "privileged",
+  "origin": "app://kai.baiyang.bilibili",
+  "icons": {
+    "56": "/img/icons/icon56x56.png"
+  },
+  "developer": {
+    "name": "白羊座的一只狼,修改 by zixing",
+    "url": "http://www.bilibili.com/"
+  },
+  "permissions": {
+    "attention": {},
+    "browser": {},
+    "mobilenetwork": {},
+	"systemXHR" : {}
+  },
+  "ime_default_softkey_bar": true,
+  "theme_color": "#00a1d6"
+}
