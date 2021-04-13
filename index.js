@@ -136,7 +136,7 @@ function getVList(error,data) {
             title.push(item.title);
             author.push(item.author);
             if (item.pic.substr(0, 2) == '//') {
-                image.push('https:' + dict[2]);
+                image.push('https:' + item.pic);
             } else {
                 image.push(item.pic);
             }
@@ -154,6 +154,48 @@ function getVList(error,data) {
     } 
 };
 
+
+//获取视频列表
+function getVList2(error, data) {
+
+
+    if (error) {
+        alert(error);
+    } else {
+        if (data.code != 0) {
+            alert(data.message);
+            return;
+        }
+        $('.items').empty() //清空列已有的列表
+        title = []
+        author = []
+        aid = []
+        bvid = []
+        image = []
+
+        $.each(data.data.list.vlist, function (r, item) {
+            title.push(item.title);
+            author.push(item.author);
+            if (item.pic.substr(0, 2) == '//') {
+                image.push('https:' + item.pic);
+            } else {
+                image.push(item.pic);
+            }
+
+            aid.push(item.aid);
+            bvid.push(item.bvid);
+        })
+        //建立列表
+        $.each(title, function (r, i) {
+            appendV(i, author[r], image[r], r + '');
+        })
+        //对焦
+        document.querySelectorAll('.item')[0].focus();
+        //退出
+    }
+};
+
+
 //获取作者列表
 function getAList(dict,each) {
   $('.items').empty() //清空列已有的列表
@@ -168,9 +210,8 @@ function getAList(dict,each) {
   uid = []
   var nick = [];
   var sub = [];
-  var image = [];
-  
-  var result = localStorage.getItem('subscription') //从本地获取信息
+  var image = []; 
+    var result = localStorage.getItem('subscription') //从本地获取信息 
   try {
     var result = JSON.parse(result)
   }catch(e){
@@ -185,14 +226,14 @@ function getAList(dict,each) {
   if(result.uid.length == 0){
     $('.items').append('您还没有添加过UP主哦<br>按“添加”添加试试')
     return
-  } 
-  $.each(each,function(r,item) {
-    uid.push(dict[0]);
-    nick.push(dict[1]);
-    sub.push(dict[2]);
-    image.push(dict[3]);
-    
-  })
+    }  
+
+    for (var i = 0; i < result.uid.length; i++) {
+        uid.push(result.uid[i]);
+        nick.push(result.nick[i]);
+        sub.push(result.sub[i]);
+        image.push(result.pic[i]); 
+    } 
   //建立列表
   $.each(nick,function(r,i) {
     appendA(i,sub[r],image[r],r + '');
@@ -396,7 +437,7 @@ function enter() {
     case 2: //关注
       if(opened_VList == false) {
         const currentIndex = document.activeElement.tabIndex;
-		ajax_get('https://api.bilibili.com/x/space/arc/search?mid=' + uid[currentIndex] + '&pn=1', getVList); 
+          ajax_get('https://api.bilibili.com/x/space/arc/search?mid=' + uid[currentIndex] + '&pn=1', getVList2); 
         softkey('刷新','播放','选项');
         opened_VList = true
       }else{
