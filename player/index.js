@@ -64,7 +64,7 @@ function getQueryVar(variable) {
 //加载视频信息
 function getInfo() {
   var aid = getQueryVar('aid');
-  $.getJSON('http://25g0cabeb.nat123.fun/services/bilibili/video/info.py?aid=' + aid, function(result) {
+  $.getJSON('http://api.bilibili.com/x/web-interface/archive/stat?aid=' + aid, function(result) {
     var title = decodeURI(getQueryVar('title'))
     var view = result.data.view
     var danmaku = result.data.danmaku

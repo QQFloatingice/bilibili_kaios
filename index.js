@@ -49,6 +49,32 @@ function ajax_post(url, data, callback, progress) {
     ajax('POST', url, data, callback, progress, 'json');
 }
 
+//比较版本号
+function compareVer(oldver,newver)
+{
+	var a = oldver.split('.');
+	var b = newver.split('.');
+	
+	for(var i = 0;i<a.length;i++)
+	{
+		var aa = parseInt(a[i]);
+		var bb = parseInt(b[i]);
+		if(bb>aa)
+		{
+			return true;
+		}
+		else if(bb===aa)
+		{
+			continue;
+		}
+		else if(bb<aa)
+		{
+			return false;
+		}
+	}
+	return false;
+}
+
 function appendV(title, author, image, tabIndex) {
   var titleN = title
   if(titleN.length > 20){
@@ -159,11 +185,7 @@ function getAList(dict,each) {
   if(result.uid.length == 0){
     $('.items').append('您还没有添加过UP主哦<br>按“添加”添加试试')
     return
-  }
-  
-  // dictNick = eval(dict[0]);
-  // dictSub = eval(dict[1]);
-  // dictImage = eval(dict[2]);
+  } 
   $.each(each,function(r,item) {
     uid.push(dict[0]);
     nick.push(dict[1]);
@@ -182,17 +204,16 @@ function getAList(dict,each) {
 function check_update(pack_name, version) {
   if($.cookie('update_checked') == true) {
     return;
-  }
-  $.getJSON('http://25g0cabeb.nat123.fun/api/update.py?name=' + pack_name, function(result) {
-    var latest_version = result.latest_version;
-    var update_time = result.update_time;
-    var link = result.link;
-    if(version != latest_version) {
-      if(confirm('【检测到新版本】\n版本号：' + latest_version + '\n发布时间：' + update_time + '\n\n是否下载新版本？')) {
-        window.open(link)
+  } 
+  $.getJSON('http://sss.wmm521.cn/kaios/bilibili_ver.json?_='+(new Date().getTime()), function(result) {
+    var latest_version = result.version;
+    if(compareVer(version,latest_version))
+	{
+		if(confirm('【检测到新版本】\n版本号：' + latest_version + '\n是否下载新版本？')) {
+        window.open(result.downloadUrl)
       }else{
       }
-    }
+	}
     $.cookie('update_checked', true)
   })
 }
@@ -349,11 +370,11 @@ function refresh() {
       var data = localStorage.getItem('subscription'); //读取数据
       data = JSON.parse(data); //将字符串转换为JSON
       $.each(data.uid,function(r,item){ //给每一个uid更新数据
-        $.getJSON('http://25g0cabeb.nat123.fun/services/bilibili/uploader/info.py?uid=' + item, function(result) {
+        $.getJSON('http://api.bilibili.com/x/space/acc/info?mid=' + item, function(result) {
           data.pic[r] = result.data.face //头像
           data.nick[r] = result.data.name //昵称
         })
-        $.getJSON('http://25g0cabeb.nat123.fun/services/bilibili/uploader/stat.py?uid=' + item, function(result) {
+        $.getJSON('http://api.bilibili.com/x/relation/stat?vmid=' + item, function(result) {
           data.sub[r] = result.data.follower //粉丝数
         })
         localStorage.setItem('subscription', JSON.stringify(data)) //将数组转换后存储数据
@@ -375,7 +396,7 @@ function enter() {
     case 2: //关注
       if(opened_VList == false) {
         const currentIndex = document.activeElement.tabIndex;
-        getVList(typeAuthorV,'result.data.list.vlist','http://25g0cabeb.nat123.fun/services/bilibili/vlist/authorV.py?uid=' + uid[currentIndex] + '&pn=1')
+		ajax_get('https://api.bilibili.com/x/space/arc/search?mid=' + uid[currentIndex] + '&pn=1', getVList); 
         softkey('刷新','播放','选项');
         opened_VList = true
       }else{
@@ -415,7 +436,7 @@ if(localStorage.getItem('subscription') == null || localStorage.getItem('studio'
 }
 
 //检查更新
-check_update('app://kai.baiyang.bilibili', 'v1.4')
+check_update('app://kai.baiyang.bilibili', '1.4')
 
 //获取首页推荐
 //getVList(typeHome,'result.data.list','http://25g0cabeb.nat123.fun/services/bilibili/homepage/get_homepage.py');

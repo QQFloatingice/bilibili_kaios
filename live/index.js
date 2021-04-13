@@ -3,18 +3,21 @@
 //获取直播流媒体源,创建流式播放器（用的是flv.js的API）
 function makeLive(room_id) {
   //获取媒体源
-  $.getJSON('http://25g0cabeb.nat123.fun/services/bilibili/live/liveSource.py?cid=' + room_id + '&qn=80',function(result) {
+  $.getJSON(  'http://api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo?room_id='+room_id+'&no_playurl=0&mask=0&qn=80&platform=web&protocol=0,1&format=0,2&codec=0,1',function(result) {
     //错误返回
     if(result.code != 0) {
       console.log(result.code);
       return;
     };
     //设置媒体源
-    var link = result.data.durl[0].url;
+    var data = result.data.playurl_info.playurl.stream[0].format[0].codec[0];
+	var url = data.url_info[0].host + data.base_url+data.url_info[0].extra;
+	console.log(url); 
+
     //创建播放器
     player = flvjs.createPlayer({
     type: 'flv',
-    url: link
+    url: url
     });
     player.attachMediaElement(document.getElementById('player'));
     player.load()
@@ -35,7 +38,7 @@ function getQueryVar(variable) {
 
 //获取直播间号
 function getLiveRoomNumer(uid) {
-  var link = 'http://25g0cabeb.nat123.fun/services/bilibili/uploader/info.py?uid=' + uid
+  var link = 'http://api.bilibili.com/x/space/acc/info?mid=' + uid
   var id = ''
   $.ajax({
     url: link,
