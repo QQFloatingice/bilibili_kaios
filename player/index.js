@@ -1,6 +1,11 @@
 
 /*  通用函数  */
-
+//跨域设置
+$.ajaxSettings.xhr = function () {
+    try {
+        return new XMLHttpRequest({ mozSystem: true });
+    } catch (e) { }
+}; 
 //打开视频
 function openV() {
   const currentIndex = document.activeElement.tabIndex;
@@ -64,13 +69,13 @@ function getQueryVar(variable) {
 //加载视频信息
 function getInfo() {
   var aid = getQueryVar('aid');
-  $.getJSON('http://api.bilibili.com/x/web-interface/archive/stat?aid=' + aid, function(result) {
-    var title = decodeURI(getQueryVar('title'))
-    var view = result.data.view
-    var danmaku = result.data.danmaku
-    var like = result.data.like
-    var coin = result.data.coin
-    var favorite = result.data.favorite
+  $.getJSON('http://api.bilibili.com/x/web-interface/view?aid=' + aid, function(result) {
+    var title = result.data.title
+    var view = result.data.stat.view
+    var danmaku = result.data.stat.danmaku
+    var like = result.data.stat.like
+    var coin = result.data.stat.coin
+    var favorite = result.data.stat.favorite
     
     $('.items').empty();
     //标题、播放量、弹幕量
