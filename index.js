@@ -453,9 +453,44 @@ function add() {
   load()
 }
 
+function searchData()
+{
+    var searchtext = $('#searchInput').val();
+    var searchurl = "http://api.bilibili.com/x/web-interface/search/type?keyword=" + searchtext + "&search_type=video&page=1" 
+    $.getJSON(searchurl, function (result) {
+
+        $('.items').empty() //清空列已有的列表
+        title = []
+        author = []
+        aid = []
+        bvid = []
+        image = []
+
+        $.each(result.data.result, function (r, item) {
+            title.push(item.title);
+            author.push(item.author);
+            if (item.pic.substr(0, 2) == '//') {
+                image.push('https:' + item.pic);
+            } else {
+                image.push(item.pic);
+            }
+
+            aid.push(item.aid);
+            bvid.push(item.bvid);
+        })
+        //建立列表
+        $.each(title, function (r, i) {
+            appendV(i, author[r], image[r], r + '');
+        })
+        //对焦
+        document.querySelectorAll('.item')[0].focus();
+    }) 
+}
+
 function refresh() {
   switch(tab_location) {
-    case 0: //搜索
+      case 0: //搜索
+          searchData();
       break;
     case 1: //首页推荐
       load();
@@ -499,7 +534,8 @@ function refresh() {
 
 function enter() {
   switch(tab_location) {
-    case 0: //搜索
+      case 0: //搜索
+          openV();
       break;
     case 1: //首页推荐
       openV();
