@@ -316,7 +316,9 @@ function check_update(pack_name, version) {
 /*  D-Pad  */
 //设置按键函数
 function handleKeydown(e) {
-  e.preventDefault();//清除默认行为（滚动屏幕等）
+	if (e.key != "EndCall") { 
+		e.preventDefault();//清除默认行为（滚动屏幕等）
+	} 
   switch(e.key) {
     case 'ArrowUp':
       nav(-1);
