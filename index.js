@@ -86,6 +86,11 @@ function appendV(title, author, image, tabIndex) {
 function appendA(nick,sub,image,tabIndex) {
   $('.items').append("<div class='item' tabIndex='" + tabIndex + "'><img class='head' src='" + image + "'/><div class='title' style='left: 63px'>" + nick + "</div><div class='author' style='left: 63px'>粉丝：" + sub + "</div></div>")
 }
+//添加直播
+function appendZ(nick, sub, image, tabIndex) {
+    $('.items').append("<div class='item' tabIndex='" + tabIndex + "'><img class='head' src='" + image + "'/><div class='title' style='left: 63px'>" + nick + "</div><div class='author' style='left: 63px'>rank：" + sub + "</div></div>")
+}
+
 //打开视频
 function openV() {
   const currentIndex = document.activeElement.tabIndex;
@@ -242,6 +247,54 @@ function getAList(dict,each) {
   document.querySelectorAll('.item')[0].focus();
 };
 
+
+
+
+//获取直播列表
+function getZList() {
+    $('.items').empty() //清空列已有的列表
+    if (navigator.onLine == false) {
+        $('.items').append('请连接互联网！');
+        return;
+    }
+    $('.items').append('正在加载…') //展示加载信息
+
+
+    //创建用于存储信息的函数
+    uid = []
+    var nick = [];
+    var sub = [];
+    var image = [];
+    var result = localStorage.getItem('studio') //从本地获取信息 
+    try {
+        var result = JSON.parse(result)
+    } catch (e) {
+        localStorage.setItem('subscription', "{\"uid\":[],\"pic\":[],\"nick\":[],\"sub\":[]}")
+        localStorage.setItem('studio', "{\"uid\":[],\"pic\":[],\"nick\":[],\"sub\":[]}")
+        getZList()
+    } 
+
+    $('.items').empty() //清空列已有的列表
+
+    if (result.uid.length == 0) {
+        $('.items').append('您还没有添加过UP主哦<br>按“添加”添加试试')
+        return
+    }
+
+    for (var i = 0; i < result.uid.length; i++) {
+        uid.push(result.uid[i]);
+        nick.push(result.nick[i]);
+        sub.push(result.sub[i]);
+        image.push(result.pic[i]);
+    }
+    //建立列表
+    $.each(nick, function (r, i) {
+        appendZ(i, sub[r], image[r], r + '');
+    })
+    //对焦
+    document.querySelectorAll('.item')[0].focus();
+};
+
 function check_update(pack_name, version) {
   if($.cookie('update_checked') == true) {
     return;
@@ -361,7 +414,8 @@ function load() {
       getAList(typeAuthor,'result.uid')
       softkey('刷新','选择','添加');
       break;
-    case 3: //直播
+   case 3: //直播
+        getZList();
       softkey('刷新','观看','添加');
       break;
   }
@@ -382,7 +436,7 @@ function add() {
       localStorage.setItem('subscription',JSON.stringify(data)) //将数组转换后存储数据
       break;
     case 3: //直播
-      var id = prompt('输入直播间号：') //弹框请用户输入数据
+      var id = prompt('输入直播的用户的UID(不是房间号)：') //弹框请用户输入数据
       if(id.match(/[a-z]/i) != null || id.match(/[`~!@#$%^&*()_\-+=<>?:"{}|,.\/;'\\[\]·~！@#￥%……&*（）——\-+={}|《》？：“”【】、；‘'，。、]/i) != null) { //正则验证输入的内容 确保只输入数字
         alert('请输入数字！')
         break;
@@ -418,11 +472,27 @@ function refresh() {
         $.getJSON('http://api.bilibili.com/x/relation/stat?vmid=' + item, function(result) {
           data.sub[r] = result.data.follower //粉丝数
         })
-        localStorage.setItem('subscription', JSON.stringify(data)) //将数组转换后存储数据
-      })
+      }) 
+      localStorage.setItem('subscription', JSON.stringify(data)) //将数组转换后存储数据
       $.ajaxSettings.async = true; //记得改回来
       break;
-    case 3: //直播
+      case 3: //直播
+          $.ajaxSettings.async = false; //临时设置为同步请求
+          var data = localStorage.getItem('studio'); //读取数据
+          data = JSON.parse(data); //将字符串转换为JSON
+          data.nick = new Array(data.uid.length);
+          data.pic = new Array(data.uid.length);
+          data.sub = new Array(data.uid.length);
+
+          $.each(data.uid, function (r, item) { //给每一个uid更新数据 
+              $.getJSON('http://api.bilibili.com/x/space/acc/info?mid=' + item, function (result) { 
+                  data.nick[r] = result.data.name //名称 
+                  data.pic[r] = result.data.face  //头像
+                  data.sub[r] = result.data.rank //rank
+              }) 
+          }) 
+          localStorage.setItem('studio', JSON.stringify(data)) //将数组转换后存储数据
+          $.ajaxSettings.async = true; //记得改回来
       break;
   }
 }

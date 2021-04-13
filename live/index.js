@@ -1,4 +1,9 @@
-
+//跨域设置
+$.ajaxSettings.xhr = function () {
+    try {
+        return new XMLHttpRequest({ mozSystem: true });
+    } catch (e) { }
+}; 
 /* 通用函数 */
 //获取直播流媒体源,创建流式播放器（用的是flv.js的API）
 function makeLive(room_id) {
