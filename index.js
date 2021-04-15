@@ -343,9 +343,11 @@ function handleKeydown(e) {
       }
       
       break;
+	case 'Q':
     case 'SoftLeft':
       refresh();
       break;
+	case 'E':
     case 'SoftRight':
       SoftRight()
       break;
