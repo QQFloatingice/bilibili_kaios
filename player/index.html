@@ -14,7 +14,7 @@
     <div class="tab">
       <ul>
         <li tabIndex="0" class="focus">简介</li>
-        <li tabIndex="1">评论</li>
+        <li tabIndex="1" id = "comments">评论</li>
       </ul>
     </div>
     <!--视频信息（弹幕、播放、三连等）-->
@@ -22,6 +22,7 @@
       <!--标题、播放、弹幕量-->
       <div class="item" id="title" tabIndex="0">
         <a id="title">标题加载中</a>
+		<br>
         <div id="info">
           <div id="view">
             <img src="../img/inside_icon/play/view.svg">
@@ -48,7 +49,7 @@
           <a id="favorite">加载中</a>
         </div>
       </div>
-      <div class="item" tabIndex="2"></div>
+      <div class="item" id="desc" tabIndex="2"></div>
       <div class="item" tabIndex="3"></div>
       <div class="item" tabIndex="4"></div>
     </div>
@@ -56,8 +57,8 @@
     <!--导航键-->
     <footer id="softkeys">
       <div id="softkey-left">全屏</div>
-      <div id="softkey-center"> </div>
-      <div id="softkey-right"> </div>
+      <div id="softkey-center"></div>
+      <div id="softkey-right">加载中</div>
     </footer>
   </body>
 </html>

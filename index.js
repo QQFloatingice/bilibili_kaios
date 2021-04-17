@@ -1,52 +1,46 @@
 
 /*  通用函数  */
 //添加视频项目
-
+//房间初始化信息
+var roominiturl = 'http://api.live.bilibili.com/room/v1/Room/room_init?id=' //直播间id：22966845
+//首页推荐直播列表
+var liverecomlisturl='http://api.live.bilibili.com/xlive/web-interface/v1/webMain/getList?platform=web'
+//直播间信息
+var roominfourl = 'http://api.live.bilibili.com/room/v1/Room/getRoomInfoOld?mid=' // 用户id：588626186
+//设置cookie的url，防止接口报错
+var setCookieUrl = 'http://data.bilibili.com/v/web/web_page_view'
+//喜欢的菜单
+var menulike = ['添加', '删除','清空'] 
+//直播的菜单
+var menulive = ['添加直播间','添加直播用户', '删除','清空'] 
 //跨域设置
 $.ajaxSettings.xhr = function () {
     try {
-        return new XMLHttpRequest({ mozSystem: true });
-    } catch (e) { }
+        var xhr = new XMLHttpRequest({ mozSystem: true }); 
+        // xhr.fakesend = xhr.send; 
+        // xhr.send = function () {  
+        //    try {  
+        //        this.setRequestHeader("Cookie", "aaa");  
+        //        this.fakesend();
+        //    } catch (err) {
+        //        alert(err);
+        //    }
+        // }; 
+        return xhr;
+    } catch (e) { console.log(e); }
 }; 
-//跨域
-function ajax(method, url, data, callback, progress, type) {
-    method = method.toUpperCase();
-    type = type || 'json';
-    var xhr = new XMLHttpRequest({ mozSystem: true });
-    xhr.onreadystatechange = function () {
 
-        if (xhr.readyState === 4) { 
-            if (xhr.status === 200) { 
-                var text = JSON.parse(xhr.responseText); 
-                callback(false, text);
-            } else {
-                callback(xhr.status + xhr.responseText);
-            }
-        }
-    };
-    if (data) {
-        var urlstr = [];
-        for (var i in data) {
-            urlstr.push(i + '=' + encodeURIComponent(data[i]));
-        } 
-        data = urlstr.join('&');
-        if ((method === 'GET' || method === 'DELETE') && data) {
-            url += /\?/.test(url) ? '&' + data : '?' + data;
-        }
-    }
+// $.ajax({
+//   async: true,
+//   type: "GET",
+//   url: setCookieUrl,
+//   success: function (result) { 
+//       //alert(result); 
+//   }
+// }); 
 
-    xhr.open(method, url, true);
-    if (method === 'POST') {
-        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-    }
-    xhr.withCredentials = true;
-    xhr.send(data);
-}
-function ajax_get(url, callback, type) {
-    ajax('GET', url, {}, callback, null, type);
-}
-function ajax_post(url, data, callback, progress) {
-    ajax('POST', url, data, callback, progress, 'json');
+function getById(id) {
+    return document.getElementById(id);
 }
 
 //比较版本号
@@ -75,26 +69,38 @@ function compareVer(oldver,newver)
 	return false;
 }
 
-function appendV(title, author, image, tabIndex) {
-  var titleN = title
-  if(titleN.length > 20){
-    titleN = titleN.substr(0,20) + '…';
-  }
-  $('.items').append("<div class='item' tabIndex='" + tabIndex + "'><img class='cover' src='" + image + "'/><div class='title'>" + titleN + "</div><div class='imgUP'>UP</div><div class='author'>" + author + "</div></div>")
+function appendV(item, tabIndex) {
+    $('.items').append("<div class='item' tabIndex='" + tabIndex + "' data-aid='" + item.aid + "' data-bvid='" + item.bvid + "' data-title='" + item.title + "'><img class='cover' src='" + item.pic +"@96w_60h.jpg"+ "'/><div class='title'>" + item.title + "</div><div class='imgUP'>UP</div><div class='author'>" + item.author + "</div></div>")
 }
 //添加UP主
-function appendA(nick,sub,image,tabIndex) {
-  $('.items').append("<div class='item' tabIndex='" + tabIndex + "'><img class='head' src='" + image + "'/><div class='title' style='left: 63px'>" + nick + "</div><div class='author' style='left: 63px'>粉丝：" + sub + "</div></div>")
+function appendA(uid, nick, sub, image, tabIndex) {
+  image = image+'@60w_60h.jpg';
+    $('.items').append("<div class='item' tabIndex='" + tabIndex + "' data-uid='" + uid + "' data-nick='" + nick + "'><img class='head' src='" + image + "'/><div class='title' style='left: 63px'>" + nick + ' (' + uid + ")</div><div class='author' style='left: 63px'>粉丝：" + sub + "</div></div>")
 }
 //添加直播
-function appendZ(nick, sub, image, tabIndex) {
-    $('.items').append("<div class='item' tabIndex='" + tabIndex + "'><img class='head' src='" + image + "'/><div class='title' style='left: 63px'>" + nick + "</div><div class='author' style='left: 63px'>rank：" + sub + "</div></div>")
+function appendZ(uid,nick,title, image,sub , tabIndex) {
+    $('.items').append("<div class='item' tabIndex='" + tabIndex + "' data-uid='" + uid + "' data-title='" + title + "'><img class='head2' src='" + image+"@100w_60h.jpg" + "'/><div class='title' style='left: 110px'>" + title + "</div><div class='author' style='left: 110px'>在线：" + sub + "</div></div>")
 }
 
 //打开视频
 function openV() {
-  const currentIndex = document.activeElement.tabIndex;
-  window.location.href = './player/index.html?aid=' + aid[currentIndex] + '&bvid=' + bvid[currentIndex] + '&title=' + title[currentIndex]
+  var currentIndex = document.activeElement.tabIndex;
+  if(currentIndex<0)
+  {
+    alert("请选择一个视频再选择播放！");
+    return;
+    } 
+    var item = $(document.querySelectorAll(".item")[currentIndex]);
+    if (item) { 
+        var aid = item.data("aid");
+        var bvid = item.data("bvid");
+        var title = item.data("title"); 
+        window.location.href = './player/index.html?aid=' + aid + '&bvid=' + bvid + '&title=' + title
+    } else {
+
+        alert("读取不到选择的视频！");
+        return;
+    }
 }
 //加载搜索框
 function loadSearch() {
@@ -108,21 +114,14 @@ function softkey(left,center,right) {
   $('#softkey-center').text(center);
   $('#softkey-right').text(right);
 }
-/*  获取信息  */
-//设置方法
-typeHome = ['item.title','item.author','item.pic','item.aid','item.bvid'];
-typeAuthor = ['item','result.nick[r]','result.sub[r]','result.pic[r]'];
-typeAuthorV = ['item.title','item.author','item.pic','item.aid','item.bvid'];
-typeHotV = ['item.title','item.author','item.pic','item.aid','item.bvid'];
-typeSearch = [];
+/*  获取信息  */ 
 
 //dict：方法（遍历时用于解析的列表：【标题，作者，配图，视频AV号，视频BV号】）（以item开头）
 //each：遍历的位置（以result开头）
 
 //获取视频列表
 function getVList(error,data) {
-
-
+     
     if (error) {
         alert(error);
     } else {
@@ -130,32 +129,17 @@ function getVList(error,data) {
             alert(data.message);
             return;
         }
-        $('.items').empty() //清空列已有的列表
-        title = []
-        author = []
-        aid = []
-        bvid = []
-        image = []
-         
-        $.each(data.data.list, function (r, item) {
-            title.push(item.title);
-            author.push(item.author);
+        $('.items').empty() //清空列已有的列表 
+        $.each(data.data.list, function (r, item) { 
             if (item.pic.substr(0, 2) == '//') {
-                image.push('https:' + item.pic);
-            } else {
-                image.push(item.pic);
+                item.pic = 'http:' + item.pic;
             }
-
-            aid.push(item.aid);
-            bvid.push(item.bvid);
-        })
-        //建立列表
-        $.each(title, function (r, i) {
-            appendV(i, author[r], image[r], r + '');
+            appendV(item, r + '');
         })
         //对焦
-        document.querySelectorAll('.item')[0].focus();
-      //退出
+        if (document.querySelectorAll('.item')[0]) { 
+            document.querySelectorAll('.item')[0].focus();
+        } 
     } 
 };
 
@@ -172,79 +156,53 @@ function getVList2(error, data) {
             return;
         }
         $('.items').empty() //清空列已有的列表
-        title = []
-        author = []
-        aid = []
-        bvid = []
-        image = []
 
-        $.each(data.data.list.vlist, function (r, item) {
-            title.push(item.title);
-            author.push(item.author);
+        $.each(data.data.list.vlist, function (r, item) { 
             if (item.pic.substr(0, 2) == '//') {
-                image.push('https:' + item.pic);
-            } else {
-                image.push(item.pic);
-            }
+                item.pic = 'http:' + item.pic;
+            }  
+            appendV(item, r + '');
+        }) 
+        //对焦 
+        if (document.querySelectorAll('.item')[0]) {
 
-            aid.push(item.aid);
-            bvid.push(item.bvid);
-        })
-        //建立列表
-        $.each(title, function (r, i) {
-            appendV(i, author[r], image[r], r + '');
-        })
-        //对焦
-        document.querySelectorAll('.item')[0].focus();
-        //退出
+            document.querySelectorAll('.item')[0].focus();
+        } 
     }
 };
 
 
 //获取作者列表
-function getAList(dict,each) {
+function getAList() {
   $('.items').empty() //清空列已有的列表
   if(navigator.onLine == false) {
     $('.items').append('请连接互联网！');
     return;
   }
   $('.items').append('正在加载…') //展示加载信息
-  
-  
-  //创建用于存储信息的函数
-  uid = []
-  var nick = [];
-  var sub = [];
-  var image = []; 
-    var result = localStorage.getItem('subscription') //从本地获取信息 
+   
+    var result =localStorage.getItem('like') //从本地获取信息 
   try {
     var result = JSON.parse(result)
-  }catch(e){
-    localStorage.setItem('subscription',"{\"uid\":[],\"pic\":[],\"nick\":[],\"sub\":[]}")
-    localStorage.setItem('studio',"{\"uid\":[],\"pic\":[],\"nick\":[],\"sub\":[]}")
-    getAList(dict,each)
-  }
-  
-  
-  $('.items').empty() //清空列已有的列表
-  
-  if(result.uid.length == 0){
-    $('.items').append('您还没有添加过UP主哦<br>按“添加”添加试试')
-    return
-    }  
+  }catch(e){ 
+    localStorage.setItem('like',"[]") 
+    getAList()
+    }
 
-    for (var i = 0; i < result.uid.length; i++) {
-        uid.push(result.uid[i]);
-        nick.push(result.nick[i]);
-        sub.push(result.sub[i]);
-        image.push(result.pic[i]); 
-    } 
+  $('.items').empty() //清空列已有的列表 
+  if(result.length == 0){
+    $('.items').append('您还没有添加过UP主哦<br>按“选项>添加”添加试试')
+    return
+    }   
   //建立列表
-  $.each(nick,function(r,i) {
-    appendA(i,sub[r],image[r],r + '');
+  $.each(result,function(r,i) {
+    appendA(i.uid,i.nick,i.sub,i.pic,r + '');
   })
-  //对焦
-  document.querySelectorAll('.item')[0].focus();
+    //对焦 
+    if (document.querySelectorAll('.item')[0]) {
+
+        document.querySelectorAll('.item')[0].focus();
+    } 
 };
 
 
@@ -258,38 +216,24 @@ function getZList() {
         return;
     }
     $('.items').append('正在加载…') //展示加载信息
-
-
-    //创建用于存储信息的函数
-    uid = []
-    var nick = [];
-    var sub = [];
-    var image = [];
-    var result = localStorage.getItem('studio') //从本地获取信息 
+ 
+    var result = localStorage.getItem('live') //从本地获取信息 
     try {
         var result = JSON.parse(result)
-    } catch (e) {
-        localStorage.setItem('subscription', "{\"uid\":[],\"pic\":[],\"nick\":[],\"sub\":[]}")
-        localStorage.setItem('studio', "{\"uid\":[],\"pic\":[],\"nick\":[],\"sub\":[]}")
+    } catch (e) { 
+        localStorage.setItem('live', "[]")
         getZList()
     } 
 
     $('.items').empty() //清空列已有的列表
 
-    if (result.uid.length == 0) {
-        $('.items').append('您还没有添加过UP主哦<br>按“添加”添加试试')
+    if (result.length == 0) {
+        $('.items').append('您还没有添加过直播哦<br>按“选项>添加”添加试试')
         return
-    }
-
-    for (var i = 0; i < result.uid.length; i++) {
-        uid.push(result.uid[i]);
-        nick.push(result.nick[i]);
-        sub.push(result.sub[i]);
-        image.push(result.pic[i]);
-    }
+    } 
     //建立列表
-    $.each(nick, function (r, i) {
-        appendZ(i, sub[r], image[r], r + '');
+    $.each(result, function (r, i) {
+        appendZ(i.uid,i.nick,i.title, i.pic,i.online, r + '');
     })
     //对焦
     document.querySelectorAll('.item')[0].focus();
@@ -299,7 +243,7 @@ function check_update(pack_name, version) {
   if($.cookie('update_checked') == true) {
     return;
   } 
-  $.getJSON('http://sss.wmm521.cn/kaios/bilibili_ver.json?_='+(new Date().getTime()), function(result) {
+  ajax = $.getJSON('http://sss.wmm521.cn/kaios/bilibili_ver.json?_='+(new Date().getTime()), function(result) {
     var latest_version = result.version;
     if(compareVer(version,latest_version))
 	{
@@ -335,13 +279,16 @@ function handleKeydown(e) {
     case 'Enter':
       enter();
       break;
-    case 'Backspace':
+      case 'Backspace':
+          if (isshowmenu) {
+              showhideMenu();
+              return;
+          }
       if(opened_VList) {
         load()
       }else{
         window.close()
-      }
-      
+      } 
       break;
 	case 'Q':
     case 'SoftLeft':
@@ -353,36 +300,84 @@ function handleKeydown(e) {
       break;
     case '0':
       if(confirm('您真的要初始化吗？\n这会丢失你所有的数据！')) {
-        localStorage.setItem('subscription',"{\"uid\":[],\"pic\":[],\"nick\":[],\"sub\":[]}")
-        localStorage.setItem('studio',"{\"uid\":[],\"pic\":[],\"nick\":[],\"sub\":[]}")
+        localStorage.setItem('like',"[]")
+        localStorage.setItem('live',"[]")
         alert('已完成！');
       }else{
         alert('已取消！');
       }
       break;
     case '#':
-      alert('By：白羊座的一只狼\n使用说明：\n1.此界面按0初始化\n2.播放界面按2调整音量');
-      break;
+      alert('By：白羊座的一只狼  修改 by zixing\n使用说明：\n1.此界面按0初始化\n2.播放界面按2增加音量\n3.播放界面按8降低音量');
+          break;
+      // case '9':  //测试代码
+      //     $.ajax({
+      //         async: false,
+      //         type: "GET",
+      //         url: roominfourl + "123123",
+      //         success: function (result) {
+      //             alert(JSON.stringify(result)); 
+      //         }, error: function (result) {
+
+      //             alert(JSON.stringify(result)); 
+      //         }, 
+      //         headers: { 
+      //            "Cookie": "bsource=search_baidu"
+      //         }
+      //     });  
+          break
   }
 }
 //设置导航键函数
 var tab_location = 1;//设置header位置
 function nav(move) {
-  const currentIndex = document.activeElement.tabIndex;
-  const next = currentIndex + move;
-  const items = document.querySelectorAll('.item');
-  const targetElement = items[next];
-  targetElement.focus();
+    if (isshowmenu === 1) {
+        var currentIndex = document.activeElement.tabIndex;
+        var menulength = document.querySelectorAll('.menuitem').length; 
+        var next = currentIndex + move;
+        if (next < 0) {
+            next = menulength - 1;
+        }
+        else if (next >= menulength) {
+            next = 0;
+        } 
+        var items = document.querySelectorAll('.menuitem');
+        var targetElement = items[next];
+        if (targetElement) { 
+            targetElement.focus();
+        }
+        return;
+    }
+  var currentIndex = document.activeElement.tabIndex;
+  var next = currentIndex + move;
+  var items = document.querySelectorAll('.item');
+  var targetElement = items[next];
+  if(targetElement)
+  { 
+    targetElement.focus();
+  }
   if(next == 0) {
     $('.items').scrollTop(0);
   }
 }
-
+var day = 3;
 function tab(move) {
-  const currentIndex = parseInt($('.focus').attr('tabIndex')); //获取目前带有focus的元素的tabIndex
-  const next = currentIndex + move; //设置移动位置
-  const items = document.querySelectorAll('li'); //遍历所有的li元素
-  const targetElement = items[next]; //将位置与遍历结果对应
+    if (isshowmenu === 1) {
+        return;
+    }
+  var currentIndex = parseInt($('.focus').attr('tabIndex')); //获取目前带有focus的元素的tabIndex
+  var next = currentIndex + move; //设置移动位置
+  if(next>3)
+  {
+    next = 0;
+  }
+  if(next<0)
+  {
+    next = 3;
+  }
+
+  var items = document.querySelectorAll('li'); //遍历所有的li元素
+  var targetElement = items[next]; //将位置与遍历结果对应
   if(targetElement == undefined){ //如果没有可供选择的目标
     return; //中止函数
   }
@@ -391,36 +386,52 @@ function tab(move) {
   tab_location = next;
   load()
 }
+var ajax = null;
 function load() {
   //关闭之前的ajax
-  try{
-    ajax.abort();
+    try {
+        if (ajax) {   
+        ajax.abort();
+    }
   }catch(e){}
   
   switch(tab_location) {
     case 0: //搜索
       loadSearch();
-      softkey('搜索','播放','选项');
+          softkey('搜索', '播放','下一页');
       break;
       case 1: //首页推荐
-          {
+      
+       
               $('.items').empty() //清空列已有的列表
               if (navigator.onLine == false) {
                   $('.items').append('请连接互联网！');
                   return;
               }
               $('.items').append('正在加载…') //展示加载信息 
-              ajax_get('http://api.bilibili.com/x/web-interface/ranking', getVList);
+              ajax = $.getJSON('http://api.bilibili.com/x/web-interface/ranking?/region?&day='+day, function (result) {  
+                  if (result.code == 0) {
+                      getVList(false, result);
+                  } else {
+                      getVList(result.message, result);
+                  }
+              })  
+          if(day ===3)
+          { 
+            softkey('刷新','播放','七天热点');
           }
-      softkey('刷新','播放','选项');
+          else if(day===7)
+          {
+            softkey('刷新','播放','三天热点');
+          }
       break;
     case 2: //关注
-      getAList(typeAuthor,'result.uid')
-      softkey('刷新','选择','添加');
+      getAList()
+          softkey('刷新', '选择','选项');
       break;
    case 3: //直播
         getZList();
-      softkey('刷新','观看','添加');
+          softkey('刷新', '观看','选项');
       break;
   }
   opened_VList = false //设置二级菜单状态
@@ -430,165 +441,564 @@ function add() {
   switch(tab_location) {
     case 2: //关注
       var id = prompt('输入UID：') //弹框请用户输入数据
-      if(id.match(/[a-z]/i) != null || id.match(/[`~!@#$%^&*()_\-+=<>?:"{}|,.\/;'\\[\]·~！@#￥%……&*（）——\-+={}|《》？：“”【】、；‘'，。、]/i) != null) { //正则验证输入的内容 确保只输入数字
-        alert('请输入数字！')
-        break;
+      if(id && id.match(/[a-z]/i) != null || id.match(/[`~!@#$%^&*()_\-+=<>?:"[]|,.\/;'\\[\]·~！@#￥%……&*（）——\-+=[]|《》？：“”【】、；‘'，。、]/i) != null) { //正则验证输入的内容 确保只输入数字
+          alert('请输入数字！')
+          return;
       }
-      var data = localStorage.getItem('subscription'); //读取数据
+      var data = localStorage.getItem('like'); //读取数据
       data = JSON.parse(data); //将字符串转换为JSON
-      data.uid.push(id); //将数据添加到JSON
-      localStorage.setItem('subscription',JSON.stringify(data)) //将数组转换后存储数据
+      data.push({uid:id}); //将数据添加到JSON
+      localStorage.setItem('like',JSON.stringify(data)) //将数组转换后存储数据
       break;
     case 3: //直播
-      var id = prompt('输入直播的用户的UID(不是房间号)：') //弹框请用户输入数据
-      if(id.match(/[a-z]/i) != null || id.match(/[`~!@#$%^&*()_\-+=<>?:"{}|,.\/;'\\[\]·~！@#￥%……&*（）——\-+={}|《》？：“”【】、；‘'，。、]/i) != null) { //正则验证输入的内容 确保只输入数字
-        alert('请输入数字！')
-        break;
+      var id = prompt('输入直播的房间号：') //弹框请用户输入数据
+      if(id && id.match(/[a-z]/i) != null || id.match(/[`~!@#$%^&*()_\-+=<>?:"[]|,.\/;'\\[\]·~！@#￥%……&*（）——\-+=[]|《》？：“”【】、；‘'，。、]/i) != null) { //正则验证输入的内容 确保只输入数字
+          alert('请输入数字！')
+          return;
       }
-      var data = localStorage.getItem('studio'); //读取数据
+      var data = localStorage.getItem('live'); //读取数据
       data = JSON.parse(data); //将字符串转换为JSON
-      data.uid.push(id); //将数据添加到JSON
-      localStorage.setItem('studio',JSON.stringify(data)) //将数组转换后存储数据
+      data.push({room_id:id}); //将数据添加到JSON
+      localStorage.setItem('live',JSON.stringify(data)) //将数组转换后存储数据
       break;
   }
   $('.items').empty() //展示加载信息
   $('.items').append('请等待…') //展示加载信息
-  refresh() //及时刷新数据
+  refresh(true) //及时刷新数据
   load()
 }
 
+function addByRoomID() {
+    var id = prompt('输入直播的房间号：') //弹框请用户输入数据
+    if (id && id.match(/[a-z]/i) != null || id.match(/[`~!@#$%^&*()_\-+=<>?:"[]|,.\/;'\\[\]·~！@#￥%……&*（）——\-+=[]|《》？：“”【】、；‘'，。、]/i) != null) { //正则验证输入的内容 确保只输入数字
+        alert('请输入数字！')
+        return;
+    }
+    var data = localStorage.getItem('live'); //读取数据
+    data = JSON.parse(data); //将字符串转换为JSON
+    data.push({ room_id: id }); //将数据添加到JSON
+    localStorage.setItem('live', JSON.stringify(data)) //将数组转换后存储数据
+    $('.items').empty() //展示加载信息
+    $('.items').append('请等待…') //展示加载信息
+    showhideMenu();
+    refresh(true) //及时刷新数据
+    load()
+}
+function addByUserId() {
+    var id = prompt('输入直播的用户ID：') //弹框请用户输入数据
+    if (id && id.match(/[a-z]/i) != null || id.match(/[`~!@#$%^&*()_\-+=<>?:"[]|,.\/;'\\[\]·~！@#￥%……&*（）——\-+=[]|《》？：“”【】、；‘'，。、]/i) != null) { //正则验证输入的内容 确保只输入数字
+        alert('请输入数字！')
+        return;
+    }
+
+    var data = localStorage.getItem('live'); //读取数据
+    data = JSON.parse(data); //将字符串转换为JSON
+    $.ajax({
+        async: false,
+        type: "GET",
+        url: roominfourl + id,
+        success: function (result) {
+            if (result.data.roomid) {
+                data.push({ room_id: result.data.roomid });
+                localStorage.setItem('live', JSON.stringify(data)) //将数组转换后存储数据
+                $('.items').empty() //展示加载信息
+                $('.items').append('请等待…') //展示加载信息
+                showhideMenu();
+                refresh(true) //及时刷新数据
+                load()
+            }
+            else {
+                alert("该用户没有直播间！");
+            }
+        },
+        error: function (result) {
+            alert(JSON.stringify(result));
+        },
+        headers: {
+            "Cookie": "bsource=search_baidu"
+        }
+    }); 
+   
+}
+
+var searchPage = 1;
+var searchdata = "";
 function searchData()
 {
-    var searchtext = $('#searchInput').val();
-    var searchurl = "http://api.bilibili.com/x/web-interface/search/type?keyword=" + searchtext + "&search_type=video&page=1" 
-    $.getJSON(searchurl, function (result) {
-
-        $('.items').empty() //清空列已有的列表
-        title = []
-        author = []
-        aid = []
-        bvid = []
-        image = []
-
-        $.each(result.data.result, function (r, item) {
-            title.push(item.title);
-            author.push(item.author);
+   if(searchPage===1)
+   {
+    if($('#searchInput').val())
+    {
+      var searchtext = $('#searchInput').val();
+      if(searchtext=='')
+      {
+        alert("请输入搜索关键字");
+        return;
+      }
+      else{
+        searchdata = searchtext;
+      }
+    } 
+    else{
+      load();
+      return;
+    }
+   }
+   else{ 
+     if(searchdata)
+     {
+       
+     }
+     else{
+      searchPage = 1;
+      var searchtext = $('#searchInput').val();
+      if(searchtext=='')
+      {
+        alert("请输入搜索关键字");
+        return;
+      }
+      else{
+        searchdata = searchtext;
+      }
+     } 
+   }
+    var searchurl = "http://api.bilibili.com/x/web-interface/search/type?keyword=" + searchdata + "&search_type=video&page="+searchPage; 
+    ajax = $.getJSON(searchurl, function (result) { 
+      if(result.data.result)
+      {
+        $('.items').empty() //清空列已有的列表  
+        $.each(result.data.result, function (r, item) { 
             if (item.pic.substr(0, 2) == '//') {
-                image.push('https:' + item.pic);
-            } else {
-                image.push(item.pic);
-            }
-
-            aid.push(item.aid);
-            bvid.push(item.bvid);
-        })
-        //建立列表
-        $.each(title, function (r, i) {
-            appendV(i, author[r], image[r], r + '');
-        })
+                item.pic = 'http:' + item.pic;
+            }  
+            appendV(item, r + '');
+        }) 
         //对焦
         document.querySelectorAll('.item')[0].focus();
+      }
+      else{
+        alert("没有更多内容");
+      }
     }) 
 }
 
-function refresh() {
+function refreshLive()
+{
+  $.ajaxSettings.async = false; //临时设置为同步请求
+          var data = localStorage.getItem('live'); //读取数据
+          data = JSON.parse(data); //将字符串转换为JSON
+
+          $.each(data, function (r, item) { //给每一个uid更新数据 
+              ajax = $.getJSON(roominiturl+ item.room_id, function (result) {  //获取房间信息
+                if(result.code!=0)
+                {
+                  data[r].uid = 0;
+                  data[r].nick = result.message;
+                  data[r].pic = '';
+                  data[r].sub = '0'; 
+                  return;
+                } 
+                data[r].uid = result.data.uid;
+                ajax = $.ajax({
+                  async: false,
+                  type: "GET",
+                  url: roominfourl+result.data.uid,
+                  success: function (result) { 
+                    data[r].title = result.data.title;
+                    data[r].pic = result.data.cover;
+                    data[r].online = result.data.online ; 
+                  },
+                  headers: { 
+                    "Cookie": "bsource=search_baidu"
+                 }
+              }); 
+              })
+          })
+          localStorage.setItem('live', JSON.stringify(data)) //将数组转换后存储数据
+          $.ajaxSettings.async = true; //记得改回来
+}
+
+function refreshLike()
+{ 
+  $.ajaxSettings.async = false; //临时设置为同步请求
+  var data = localStorage.getItem('like'); //读取数据
+  data = JSON.parse(data); //将字符串转换为JSON
+  $.each(data,function(r,item){ //给每一个uid更新数据
+    ajax = $.getJSON('http://api.bilibili.com/x/space/acc/info?mid=' + item.uid, function(result) {
+      data[r].pic = result.data.face //头像
+      data[r].nick = result.data.name //昵称
+    })
+    ajax = $.getJSON('http://api.bilibili.com/x/relation/stat?vmid=' + item.uid, function(result) { 
+      data[r].sub = result.data.follower //粉丝数
+    })
+  }) 
+  localStorage.setItem('like', JSON.stringify(data)) //将数组转换后存储数据
+  $.ajaxSettings.async = true; //记得改回来
+
+}
+
+function refresh(ignoremenu) {
+    if (ignoremenu) {
+
+    }
+    else {
+        if (isshowmenu) {
+            selectMenu();
+            return;
+        }
+    }
+   
   switch(tab_location) {
       case 0: //搜索
+          searchPage = 1;
           searchData();
       break;
     case 1: //首页推荐
       load();
       break;
     case 2: //关注
-      $.ajaxSettings.async = false; //临时设置为同步请求
-      var data = localStorage.getItem('subscription'); //读取数据
-      data = JSON.parse(data); //将字符串转换为JSON
-      $.each(data.uid,function(r,item){ //给每一个uid更新数据
-        $.getJSON('http://api.bilibili.com/x/space/acc/info?mid=' + item, function(result) {
-          data.pic[r] = result.data.face //头像
-          data.nick[r] = result.data.name //昵称
-        })
-        $.getJSON('http://api.bilibili.com/x/relation/stat?vmid=' + item, function(result) {
-          data.sub[r] = result.data.follower //粉丝数
-        })
+     if(  $('#softkey-left').text()==="刷新")
+     { 
+      refreshLike();
+      load();
+     } else if(  $('#softkey-left').text()==="下一页")
+     {  
+      nowpage++;
+      ajax = $.getJSON('http://api.bilibili.com/x/space/arc/search?mid=' 
+      + nowuserid
+      + '&pn='+nowpage, function (result) {
+          if(result.data.list.vlist.length>0)
+          {
+            if (result.code == 0) {
+              getVList2(false, result);
+          } else {
+              getVList2(result.message, result);
+          }
+          }else{
+            alert("没有下一页了！");
+          }
       }) 
-      localStorage.setItem('subscription', JSON.stringify(data)) //将数组转换后存储数据
-      $.ajaxSettings.async = true; //记得改回来
+      softkey('下一页', '播放','返回');
+     } 
       break;
       case 3: //直播
-          $.ajaxSettings.async = false; //临时设置为同步请求
-          var data = localStorage.getItem('studio'); //读取数据
-          data = JSON.parse(data); //将字符串转换为JSON
-          data.nick = new Array(data.uid.length);
-          data.pic = new Array(data.uid.length);
-          data.sub = new Array(data.uid.length);
-
-          $.each(data.uid, function (r, item) { //给每一个uid更新数据 
-              $.getJSON('http://api.bilibili.com/x/space/acc/info?mid=' + item, function (result) { 
-                  data.nick[r] = result.data.name //名称 
-                  data.pic[r] = result.data.face  //头像
-                  data.sub[r] = result.data.rank //rank
-              }) 
-          }) 
-          localStorage.setItem('studio', JSON.stringify(data)) //将数组转换后存储数据
-          $.ajaxSettings.async = true; //记得改回来
+        refreshLive();
+        load();
       break;
   }
 }
 
-function enter() {
+var nowuserid = "";
+var nowpage = 1;
+function enter() { 
+    if (isshowmenu) {
+        selectMenu();
+        return;
+    }
   switch(tab_location) {
       case 0: //搜索
+	  var items = document.querySelectorAll(".item");
+          if (items.length === 0 || document.activeElement.tabIndex<0)
+        {
+          alert("请先选择一个视频！");
+          return;
+          }; 
           openV();
       break;
     case 1: //首页推荐
+	 var currentIndex = document.activeElement.tabIndex;
+        if(currentIndex<0)
+        {
+          alert("请先选择一个视频！");
+          return;
+          }; 
       openV();
       break;
     case 2: //关注
       if(opened_VList == false) {
-        const currentIndex = document.activeElement.tabIndex;
-          ajax_get('https://api.bilibili.com/x/space/arc/search?mid=' + uid[currentIndex] + '&pn=1', getVList2); 
-        softkey('刷新','播放','选项');
+        var currentIndex = document.activeElement.tabIndex;
+        if(currentIndex<0)
+        {
+          alert("请先选择一个UP主！");
+          return;
+          }; 
+          nowuserid = $(document.querySelectorAll(".item")[currentIndex]).data("uid") ;
+          nowpage = 1;
+          ajax = $.getJSON('http://api.bilibili.com/x/space/arc/search?mid=' 
+          + nowuserid
+          + '&pn='+nowpage, function (result) {
+              if (result.code == 0) {
+                  getVList2(false, result);
+              } else {
+                  getVList2(result.message, result);
+              }
+          }) 
+          softkey('下一页', '播放','返回');
         opened_VList = true
       }else{
         openV()
       }
       break;
     case 3: //直播
-      const currentIndex = document.activeElement.tabIndex;
-      var link = './live/index.html?uid=' + uid[currentIndex]
+      var currentIndex = document.activeElement.tabIndex;
+      if(currentIndex<0)
+      {
+        alert("请选择一个直播再进行观看！");
+        return;
+          }
+          var link = './live/index.html?uid=' + $(document.querySelectorAll(".item")[currentIndex]).data("uid");
       window.location.href = link;
       break;
   }
 }
 
+var isshowmenu = 0; 
+var lastl = "";
+var lastm = "";
+var lastr = "";
+var lastindex = 0;
+function setLastindex() {
+    lastindex = document.activeElement.tabIndex;
+    if (lastindex < 0) {
+        lastindex = 0;
+    }
+}
+
+function showhideMenu(menu) {
+     
+    if (isshowmenu === 0) {
+        setLastindex();
+        getById("menu").style.display = "block";
+        lastl = $('#softkey-left').text();
+        lastm = $('#softkey-center').text();
+        lastr = $('#softkey-right').text();
+
+        var str = "";
+        for (var i = 0; i < menu.length; i++) {
+            str += '<li class="menuitem" tabIndex="' + i + '">' + menu[i] + '</li>';
+        }
+        getById("menucontainer").innerHTML = str;
+        var items = document.querySelectorAll('.menuitem');
+        items[0].focus();
+        softkey("选择", "确认", "返回");
+        isshowmenu = 1;
+    }
+    else {
+        try {
+            isshowmenu = 0;
+            getById("menu").style.display = "none";
+            softkey(lastl, lastm, lastr);
+            var items = document.querySelectorAll('.item');
+            if (items[lastindex]) { 
+                items[lastindex].focus();
+                items[lastindex].scrollIntoView(true);
+            }
+        }
+        catch (err) {
+            alert(err);
+        }
+    } 
+} 
+
+function ClearLike() {
+    if (confirm('确定清空所有关注吗？')) {
+        var result = result = [];
+        localStorage.setItem('like', JSON.stringify(result)) //将数组转换后存储数据
+        showhideMenu();
+        load();
+    }
+}
+
+function ClearLive() {
+    if (confirm('确定清空所有直播吗？')) {
+        var result = result = [];
+        localStorage.setItem('live', JSON.stringify(result)) //将数组转换后存储数据
+        showhideMenu();
+        load();
+    }
+}
+
+//取消关注用户
+function UnLikeUser() {
+    var item = $(document.querySelectorAll('.item')[lastindex]);
+    if (item) {
+        var uid = item.data('uid');
+        var nick = item.data('nick');
+
+        if (confirm('确定取消关注"' + nick + '"吗？')) { 
+            var result = localStorage.getItem('like') //从本地获取信息 
+            try {
+                result = JSON.parse(result)
+            } catch (e) {
+                result = [];
+            } 
+            for (var i = 0; i < result.length; i++) {
+                if (result[i].uid == uid) {
+                    result.splice(i, 1);
+                    i--;
+                }
+            }
+            localStorage.setItem('like', JSON.stringify(result)) //将数组转换后存储数据
+            showhideMenu(); 
+            load();
+        }
+    } 
+}
+
+//取消关注直播
+function UnLikeLive() {
+    var item = $(document.querySelectorAll('.item')[lastindex]);
+    if (item) {
+        var uid = item.data('uid');
+        var title = item.data('title');
+
+        if (confirm('确定取消关注"' + title + '"吗？')) {
+            var result = localStorage.getItem('live') //从本地获取信息 
+            try {
+                result = JSON.parse(result)
+            } catch (e) {
+                result = [];
+            }
+            for (var i = 0; i < result.length; i++) {
+                if (result[i].uid == uid) {
+                    result.splice(i, 1);
+                    i--;
+                }
+            }
+            localStorage.setItem('live', JSON.stringify(result)) //将数组转换后存储数据
+            showhideMenu();
+            load();
+        }
+    }
+}
+
+function selectMenu() {
+    var index = document.activeElement.tabIndex;
+    var items = document.querySelectorAll('.menuitem');
+    var item = items[index];
+    if (item) {
+        var menuname = $(item).text();//选中的菜单名称
+        if (tab_location == 2) { //关注列表的菜单
+            switch (menuname) {
+                case "添加":
+                    showhideMenu(); 
+                    add();
+                    break;
+                case "删除":
+                    UnLikeUser();
+                    break;
+                case "清空":
+                    ClearLike();
+                    break;
+            }
+        }
+        else if (tab_location == 3) { //直播列表的菜单
+            switch (menuname) {
+                case "添加直播间":
+                    addByRoomID();
+                    break;
+                case "添加直播用户":
+                    addByUserId();
+                    break; 
+                case "删除":
+                    UnLikeLive();
+                    break;
+                case "清空":
+                    ClearLive();
+                    break;
+            }
+        }
+        tab_location
+    }
+}
+
+
 function SoftRight() {
   switch(tab_location) {
     case 0: //搜索
+    searchPage++;
+      searchData()
       break;
     case 1: //首页推荐
+    if(day===3)
+    {
+      day=7;
+      load();
+    }
+    else if(day ===7)
+    {
+      day = 3; 
+      load();
+    }
       break;
-    case 2: //关注
-      add()
+      case 2: //关注
+          if (opened_VList) {
+              load()
+          } else {
+              showhideMenu(menulike);
+          } 
       break;
     case 3: //直播
-      add()
+          showhideMenu(menulive);
       break;
   }
 }
 //设置触发器
 document.activeElement.addEventListener('keydown', handleKeydown);
-
+ 
 /*  刚开应用该干啥  */
 //若第一次安装则初始化关注列表等信息
-if(localStorage.getItem('subscription') == null || localStorage.getItem('studio') == null) {
-  localStorage.setItem('subscription','')
-  localStorage.setItem('studio','')
+if (localStorage.getItem('like') == null || localStorage.getItem('live') == null) {
+    localStorage.setItem('like', '')
+    localStorage.setItem('live', '')
 }
 
-//检查更新
-check_update('app://kai.baiyang.bilibili', '1.4')
+try {
+    var subscription = localStorage.getItem('subscription')
+    if (subscription) {
+        //有旧版关注列表
+        subscription = JSON.parse(subscription);
+        var savesub = []
+        for (var i = 0; i < subscription.uid.length; i++) {
+            savesub.push({ uid: subscription.uid[i] });
+        }
+        localStorage.setItem('like', JSON.stringify(savesub));
+        localStorage.setItem('subscription', '')
+        refreshLike();
+    }
+    var studio = localStorage.getItem('studio')
+    if (studio) {
+        //有旧版直播列表
+        studio = JSON.parse(studio); 
+        var savestu = [] 
+        for (var i = 0; i < studio.uid.length; i++) {
+            $.ajax({
+                async: false,
+                type: "GET",
+                url: roominfourl + studio.uid[i],
+                success: function (result) {  
+                    if(result.data.roomid)
+                    {
+                      savestu.push({ room_id: result.data.roomid }); 
+                    }
+                },
+                headers: { 
+                  "Cookie": "bsource=search_baidu"
+                }
+            });
+        }
+        localStorage.setItem('live', JSON.stringify(savestu)) //将数组转换后存储数据 
+        localStorage.setItem('studio','') 
+        refreshLive();
+    }
+}
+catch (err) {
+    alert(err);
+}
 
-//获取首页推荐
-//getVList(typeHome,'result.data.list','http://25g0cabeb.nat123.fun/services/bilibili/homepage/get_homepage.py');
+
+//检查更新
+check_update('app://kai.baiyang.bilibili', '1.5') 
+//获取首页推荐 
 load()
+ 

@@ -14,11 +14,13 @@ function makeLive(room_id) {
       console.log(result.code);
       return;
     };
-    //设置媒体源
+	if(result.data.playurl_info)
+	{
+		  //设置媒体源
     var data = result.data.playurl_info.playurl.stream[0].format[0].codec[0];
-	var url = data.url_info[0].host + data.base_url+data.url_info[0].extra;
-	console.log(url); 
-
+	var url = data.url_info[0].host + data.base_url+data.url_info[0].extra; 
+	//console.log(url); 
+	
     //创建播放器
     player = flvjs.createPlayer({
     type: 'flv',
@@ -27,6 +29,10 @@ function makeLive(room_id) {
     player.attachMediaElement(document.getElementById('player'));
     player.load()
     player.play()
+	}
+	else{
+		alert("直播不在进行中！");
+	} 
   })
 }
 
@@ -83,7 +89,9 @@ function enter() {
 
 //设置按键函数
 function handleKeydown(e) {
-  e.preventDefault();//清除默认行为（滚动屏幕等）
+	if (e.key != "EndCall") { 
+		e.preventDefault();//清除默认行为（滚动屏幕等）
+	}
   switch(e.key) {
     case 'ArrowUp':
       nav(-1);
@@ -103,6 +111,7 @@ function handleKeydown(e) {
     case 'Backspace':
       window.history.back(1);
       break;
+	case 'Q':
     case 'SoftLeft':
       //切换全屏
       if($('#player').attr('class') == 'player') {
@@ -111,11 +120,15 @@ function handleKeydown(e) {
         fullscreen(false);
       }
       break;
+	case 'E':
     case 'SoftRight': //重新加载
       location.reload();
       break;
     case '2':
-      navigator.volumeManager.requestShow();
+      navigator.volumeManager.requestUp();
+      break;
+	case '8':
+      navigator.volumeManager.requestDown();
       break;
   }
 }
